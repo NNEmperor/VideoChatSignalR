@@ -31,7 +31,7 @@ namespace ChatApp
                 });
             });
 
-            services.AddSingleton<IDictionary<string, UserConnection>>(opts => new Dictionary<string, UserConnection>());
+            services.AddSingleton<IDictionary<string, int>>(opts => new Dictionary<string, int>());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
