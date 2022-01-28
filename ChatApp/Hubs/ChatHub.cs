@@ -9,33 +9,55 @@ namespace ChatApp.Hubs
 {
     public class ChatHub : Hub
     {
-        private readonly string _botUser;
+        private readonly IDictionary<string, UserConnection> _connections;
 
-        public ChatHub()
+        public ChatHub(IDictionary<string, UserConnection> connections)
         {
-            _botUser = "MyChatBot";
+            _connections = connections;
         }
 
         public async Task JoinRoom(UserConnection userConnection)
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, userConnection.Room);
-
-            await Clients.Group(userConnection.Room).SendAsync("ReceiveMessage", _botUser, $"{userConnection.User} has joined {userConnection.Room}");
+            await Groups.AddToGroupAsync(Context.ConnectionId, /*userConnection.Room */ "test");
         }
+
+        public async Task StartChat(StartingChatData data)
+        {
+            if (_connections.TryGetValue(Context.ConnectionId, out UserConnection userConnection))
+            {
+                StartingChatResponseData response = new StartingChatResponseData() { From = Context.ConnectionId, Name = data.Name, Signal = data.Signal };
+                await Clients.Group(/*userConnection.Room*/"test").SendAsync("callusers", userConnection.User, response);//for now whole group
+            }
+        }
+
+        public async Task AnswerCall(AnswerCallData data)
+        {
+            //if (_connections.TryGetValue(Context.ConnectionId, out UserConnection userConnection))
+            //{
+            string temp = Context.ConnectionId;
+                await Clients.All/*Group(userConnection.Room)*/.SendAsync("callaccepted", data.Signal);//for now whole group
+            //}
+        }
+
         public async Task Disconnect()
         {
-            await Clients.All.SendAsync("callended");
+            if (_connections.TryGetValue(Context.ConnectionId, out UserConnection userConnection))
+            {
+                await Clients.Group(/*userConnection.Room*/"test").SendAsync("callended");//for now whole group ends if one hangs up
+            }
         }
 
-        public async Task Calluser(string userToCall, string signalData, string from, string name)
+        public async Task Calluser(CallUserC callUserC)
         {
-            await Clients.User(userToCall).SendAsync("calluser", signalData, from, name);
+            string userToCall = callUserC.UserToCall.ToString();
+            CallUserS userDataSendingBack = new CallUserS { From = callUserC.From, Name = callUserC.Name, Signal = callUserC.Signal };
+            await Clients.All.SendAsync("calluser", userDataSendingBack);
         }
 
-        public async Task Answercall(string to, string signal)
-        {
-            await Clients.User(to).SendAsync("callaccepted", signal);
-        }
+        //public async Task Answercall(AnswerCallC answerCallC)
+        //{
+        //    await Clients.All.SendAsync("callaccepted", answerCallC.Signal);
+        //}
 
     }
 }

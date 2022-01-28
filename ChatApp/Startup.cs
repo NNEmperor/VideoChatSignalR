@@ -1,4 +1,5 @@
 using ChatApp.Hubs;
+using ChatApp.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -29,6 +30,8 @@ namespace ChatApp
                     .AllowCredentials();
                 });
             });
+
+            services.AddSingleton<IDictionary<string, UserConnection>>(opts => new Dictionary<string, UserConnection>());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -40,6 +43,7 @@ namespace ChatApp
             }
 
             app.UseRouting();
+
 
             app.UseCors();
 
